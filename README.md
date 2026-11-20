@@ -112,14 +112,20 @@ addon refresh instead of rebuilding again on the next timer tick. Live lead
 timers, status membership and Codex counts are still read afresh; there is no
 persistent list cache. ESO still lays out all matching native tiles, so very
 large lists can still cause an opening hitch.
+Rebuilds restore native tooltip and action state when the previously hovered
+pooled tile remains visible; hidden tiles do not regain hover state.
 
-## Validation
+## Tests
 
 Run the mocked regression tests from this directory with Lua 5.1:
 
 ```powershell
 lua .\tests\runtime.lua
 ```
+
+For dependency setup and measured coverage, see the
+[shared setup and coverage guide](../Tamriel-Tools/tools/testing/README.md);
+select `--project Tamriel-Tools-Lead-Filters`.
 
 The tests cover filtering, independent quality/difficulty selections, quality
 range handles, preferences and reset, search-first placement, native group
@@ -133,6 +139,8 @@ was checked against ESO UI API version `101051`.
 Performance regressions also exercise a 600-lead list, checking one build per
 opening, one Codex update per tile layout, reused controls, and pending-refresh
 coalescing. These work-count tests do not measure in-game frame time.
+
+## In-Game Verification
 
 In-game verification is still required:
 

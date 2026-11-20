@@ -312,7 +312,12 @@ local function Setup(items, options)
         self:OnCategorySelected(s.category)
         self.isRefreshingAll = false
     end
+    function class:SetMouseOverTile(tile)
+        self.mouseOverTile = tile
+        s.hoverRestores = (s.hoverRestores or 0) + 1
+    end
     local tileClass = {}
+    function tileClass:IsControlHidden() return self.control:IsControlHidden() end
     function tileClass:Refresh()
         self.nativeRefreshes = (self.nativeRefreshes or 0) + 1
     end
@@ -731,7 +736,7 @@ end
 function tests.no_matches_clear_tiles_and_have_an_explicit_count()
     local s = Setup({ Antiquity(1, "Ore") })
     s:Show()
-    s.owner.mouseOverTile = s.items[1]
+    s.owner.mouseOverTile = s.owner.antiquityTilesByAntiquityId[1]
     s.saved.search = "nothing"
     s.filters:Refresh()
     s:ExpectRows("")
@@ -866,11 +871,15 @@ function tests.compact_difficulties_preserve_choices_and_remove_obsolete_tiers()
         previousRight = x + button.width
     end
     assert(buttons[2].alpha == 1 and buttons[1].alpha < 1)
+    buttons[1].handlers.OnMouseEnter(buttons[1])
+    assert(InformationTooltip.text == "Advanced (hidden)" and InformationTooltip.owner == buttons[1])
     buttons[1].handlers.OnClicked(buttons[1])
     s:ExpectRows("2,1")
     assert(buttons[1].alpha == 1)
     buttons[1].handlers.OnMouseEnter(buttons[1])
     assert(InformationTooltip.text == "Advanced (shown)")
+    buttons[1].handlers.OnMouseExit(buttons[1])
+    assert(InformationTooltip.owner == nil and InformationTooltip.text == nil)
     s.filters:Reset()
     for _, button in ipairs(buttons) do assert(button.alpha == 1) end
     s:ExpectRows("2,1")
@@ -1120,6 +1129,32 @@ function tests.parent_hiding_restores_background_and_cleans_controls_without_sce
     assert(s.filters.backgroundState and s.fragments[RIGHT_BG_FRAGMENT] == nil)
     s:Hide()
     assert(s.fragments[RIGHT_BG_FRAGMENT] and s.fragmentAdds == 2 and s.fragmentRemoves == 2)
+end
+
+function tests.full_refresh_restores_hover_on_a_reused_visible_tile()
+    local s = Setup({ Antiquity(1, "Lead") })
+    s:Show()
+    local tile = s.owner.antiquityTilesByAntiquityId[1]
+    s.owner.mouseOverTile = tile
+    s.owner:OnAntiquitiesUpdated()
+    assert(s.owner.antiquityTilesByAntiquityId[1] == tile)
+    assert(s.owner.mouseOverTile == tile, "A visible reused tile must retain its native tooltip/action state")
+    assert(s.hoverRestores == 1, "Restore hover through the native method")
+end
+
+function tests.filtered_out_hovered_tiles_are_not_restored()
+    local s = Setup({ Antiquity(1, "Keep"), Antiquity(2, "Remove") })
+    s:Show()
+    local tile = s.owner.antiquityTilesByAntiquityId[2]
+    s.owner.mouseOverTile = tile
+    s.filters.saved.search = "Keep"
+    s.filters:Refresh()
+    assert(tile:IsControlHidden())
+    assert(not s.owner.mouseOverTile and not s.hoverRestores)
+    s.owner.mouseOverTile = s.owner.antiquityTilesByAntiquityId[1]
+    s.filters.saved.search = "No matches"
+    s.filters:Refresh()
+    assert(not s.owner.mouseOverTile and not s.hoverRestores)
 end
 
 local passed = 0

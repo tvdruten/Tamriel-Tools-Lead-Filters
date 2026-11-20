@@ -168,6 +168,7 @@ function Filters:BuildList(owner, category)
         local _, verticalOffset = owner.contentList.scroll:GetScrollOffsets()
         offset = verticalOffset
     end
+    local oldMouseOverTile = owner.mouseOverTile
     owner:ResetCategoryTiles(true)
     local function Compare(left, right)
         return self.Compare(metadata[left:GetId()], metadata[right:GetId()], self.saved.sortBy)
@@ -191,6 +192,9 @@ function Filters:BuildList(owner, category)
     end
     self.countLabel:SetText(string.format("%d / %d leads", matchCount, #entries))
     self:UpdateTypeChoices(entries)
+    if oldMouseOverTile and not oldMouseOverTile:IsControlHidden() then
+        owner:SetMouseOverTile(oldMouseOverTile)
+    end
 end
 
 function Filters:UpdateCodexProgress(tile)

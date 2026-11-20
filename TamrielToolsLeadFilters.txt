@@ -1,6 +1,6 @@
 ## Title: Tamriel Tools: Lead Filters
 ## Author: Handshot
-## Description: Filter scryable antiquities by type, difficulty, recovery and text; sort by zone, name or lead expiry.
+## Description: Filter scryable antiquities by type, difficulty and text; sort by zone, name or lead expiry.
 ## Version: 2026.11.0
 ## AddOnVersion: 20261100
 ## APIVersion: 101051
